@@ -20,9 +20,18 @@ int doorSwitchState = 1;
 
 int lastDoorSwitchState = 1;
 
+// *** Autoopen State ***
+int sensorWert = 0;
+int autoopenStatus = 0;
+
 // *** define the GPIO Pins ***
-int spaceSwitchPin = 3; //D9 (RX)
-int doorSwitchPin = 4; //D2
+int spaceSwitchPin = 3;  //D9 (RX)
+int doorSwitchPin = 4;   //D2
+
+// *** Autoopen PIN ***
+int RelaisPin = 0;      //D3
+int ldrPin = A0;        //A0
+int autoopenPin = 14;   //D5
 
 // *** report to which Server ***
 char * spaceapiServer = "putin.lan";
@@ -66,12 +75,16 @@ void setup() {
   // *** Space and Door Switch ***
   pinMode(spaceSwitchPin, INPUT_PULLUP);
   pinMode(doorSwitchPin, INPUT_PULLUP);
-
+  pinMode(ldrPin, INPUT_PULLUP);
+  pinMode(RelaisPin, OUTPUT);
+  pinMode(autoopenPin, INPUT_PULLUP);
 
 }
 
 void loop() {
 
+  // *** CHECK SPACESWITCH ***
+  
   spaceSwitchState = digitalRead(spaceSwitchPin);
   doorSwitchState = digitalRead(doorSwitchPin);
   if ((spaceSwitchState != lastSpaceSwitchState) || (doorSwitchState != lastDoorSwitchState)) {
@@ -93,4 +106,25 @@ void loop() {
     lastDoorSwitchState = doorSwitchState;
   }
 
+ // *** CHECK AUTOOPENSWITCH ***
+
+ 
+  sensorWert = analogRead(ldrPin);
+  autoopenStatus = digitalRead(autoopenPin);
+  Serial.println(autoopenStatus);
+  Serial.print("Sensorwert = " );
+  Serial.println(sensorWert);
+
+  //and autoopenStatus == 0
+  if ((sensorWert > 350) && (autoopenStatus == 0)){    
+    delay(1000);
+    digitalWrite(RelaisPin, HIGH);
+    delay(4000);
+    digitalWrite(RelaisPin, LOW);
+    delay(82000);  // Cooldown ca. 1.3min
+  }
+  else {
+    digitalWrite(RelaisPin, LOW);
+  }
+  delay(1000);
 }
