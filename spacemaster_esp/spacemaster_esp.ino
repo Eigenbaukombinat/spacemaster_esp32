@@ -17,18 +17,17 @@ int spaceSwitchState = 1;
 int lastSpaceSwitchState = 1;
 // *** Door Status ***
 int doorSwitchState = 1;
-
 int lastDoorSwitchState = 1;
 
 // *** Autoopen State ***
 int sensorWert = 0;
 int autoopenStatus = 0;
 
-// *** define the GPIO Pins ***
+// *** define the GPIO Pins Door***
 int spaceSwitchPin = 3;  //D9 (RX)
 int doorSwitchPin = 4;   //D2
 
-// *** Autoopen PIN ***
+// *** define the GPIO Autoopen PIN ***
 int RelaisPin = 0;      //D3
 int ldrPin = A0;        //A0
 int autoopenPin = 14;   //D5
@@ -50,6 +49,7 @@ void publishStatus(char * spaceapiServer, uint16_t port, String spacestatus) {
 
 void setup() {
 
+  digitalWrite(RelaisPin, LOW);
   Serial.begin(115200);
   while (!Serial) {
     ; //waiting for the serial connection
@@ -66,7 +66,6 @@ void setup() {
     Serial.print(".");
 
   }
-
   Serial.println("");
   Serial.println("Wifi connected");
   Serial.print("IP address ");
@@ -78,7 +77,7 @@ void setup() {
   pinMode(ldrPin, INPUT_PULLUP);
   pinMode(RelaisPin, OUTPUT);
   pinMode(autoopenPin, INPUT_PULLUP);
-
+  
 }
 
 void loop() {
@@ -105,18 +104,24 @@ void loop() {
     lastSpaceSwitchState = spaceSwitchState;
     lastDoorSwitchState = doorSwitchState;
   }
-
+ Serial.println("####START");
+ Serial.print("spaceSwitchState = " );
+ Serial.println(spaceSwitchState);
+ Serial.print("doorSwitchState = " );
+ Serial.println(doorSwitchState);
+ 
  // *** CHECK AUTOOPENSWITCH ***
-
  
   sensorWert = analogRead(ldrPin);
   autoopenStatus = digitalRead(autoopenPin);
+  Serial.print("autoopenStatus = " );
   Serial.println(autoopenStatus);
   Serial.print("Sensorwert = " );
   Serial.println(sensorWert);
+  Serial.println("####END");
+  digitalWrite(RelaisPin, LOW);
 
-  //and autoopenStatus == 0
-  if ((sensorWert > 350) && (autoopenStatus == 0)){    
+  if ((sensorWert > 350) && (autoopenStatus == 0) && (spaceSwitchState == 0) && (doorSwitchState == 1)){    
     delay(1000);
     digitalWrite(RelaisPin, HIGH);
     delay(4000);
