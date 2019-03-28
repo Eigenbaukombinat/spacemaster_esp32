@@ -1,3 +1,19 @@
 // *** Define the Wlan to connect ***
-char ssid[] = "<ssid>";
-const char* password = "<key>";
+char ssid[] = "";
+const char* password = "";
+
+// *** report to which Server ***
+const char* mqtt_server = "";
+const char* hname = "";
+
+// *** report to Mqtt-Topics ***
+const char* topicopen = "space/status/open";
+const char* topicdebugmqtt = "space/status/debug/mqtt";
+const char* topicdebugwifi = "space/status/debug/wifi";
+const char* topicklingel = "space/status/klingel";
+const char* topicklingelopen = "space/status/klingel/count-OPEN";
+const char* topicklingelclose = "space/status/klingel/count-CLOSE";
+
+// *** sensorWert ***
+int sensorWert = 0;
+int schwellWert = 350;
