@@ -47,10 +47,8 @@ void setup() {
   Serial.println(ssid);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    // wait for the WiFi connection
     delay(500);
     Serial.print(".");
-
   }
   client.publish(topicdebugwifi, "reconnect" + WiFi.localIP());
   Serial.println("");
@@ -66,10 +64,11 @@ void setup() {
   pinMode(RelaisPin, OUTPUT);
   pinMode(autoopenPin, INPUT_PULLUP);
 
-  //MQTT
+  // *** MQTT ***
   client.setServer(mqtt_server, 1883);
 }
 
+// *** MQTT reconnect ***
 void reconnect() {    // Loop until we're reconnected
   if (!client.connected()) {
     Serial.print("Attempting MQTT connection...");    // Attempt to connect
@@ -94,36 +93,46 @@ void loop() {
   
   spaceSwitchState = digitalRead(spaceSwitchPin);
   doorSwitchState = digitalRead(doorSwitchPin);
-  if ((spaceSwitchState != lastSpaceSwitchState) || (doorSwitchState != lastDoorSwitchState)) {              //Statusabgleich
-    if ((doorSwitchState == 0) || (spaceSwitchState == 1)) { // tür abgeschlossen oder schalter aus
+  if (doorSwitchState != lastDoorSwitchState) {              //Statusabgleich zum letzen Durchlauf
+    if (doorSwitchState == 0) { // tür abgeschlossen
       String spacestatus = "closed";
+      Serial.println(spacestatus);
+      client.publish(topicopen, "false"); //MQTT Space closed
+      client.publish(topicdoor, "lock"); //MQTT tür abgeschlossen 
+    }
+    if (doorSwitchState == 1) {//MQTT tür unabgeschlossen
+      client.publish(topicdoor, "unlock"); //MQTT tür offen 
+    }
+  }
+   if (spaceSwitchState != lastSpaceSwitchState) {
+    if (spaceSwitchState == 1  ) {  //schalter aus
+      String spacestatus = "closed";
+      client.publish(topicopen, "false"); //MQTT Space closed
       Serial.println(spacestatus);
       Serial.println(count);
       String countstr = String(count);
-
-      //MQTT
-      client.publish(topicopen, "false");
       char attributes[100];
       countstr.toCharArray(attributes, 100);
       client.publish(topicklingelclose, attributes);
       count = 0;   // reset counter on Switchstate
-    } else if (spaceSwitchState == 0) { // schalter ein
-      String spacestatus = "open";
-      Serial.println(spacestatus);
-      Serial.println(count);
-      String countstr = String(count);
-            
-      //MQTT
-      client.publish(topicopen, "true");
-      char attributes[100];
-      countstr.toCharArray(attributes, 100);
-      client.publish(topicklingelopen, attributes);
-      count = 0;   // reset counter on Switchstate
     }
+    if ((spaceSwitchState == 0)  && (doorSwitchState == 1)) { // schalter ein und tür unabgeschlossen
+        String spacestatus = "open";
+        Serial.println(spacestatus);
+        Serial.println(count);
+        String countstr = String(count);
+        client.publish(topicopen, "true");   //MQTT Space open
+        char attributes[100];
+        countstr.toCharArray(attributes, 100);
+        client.publish(topicklingelopen, attributes);
+        count = 0;   // reset counter on Switchstate
+    }
+  
+  }
     delay(500);                                        //delay 
     lastSpaceSwitchState = spaceSwitchState;
     lastDoorSwitchState = doorSwitchState;
-  }
+  
  Serial.println("####START");
  Serial.print("spaceSwitchState = " );
  Serial.println(spaceSwitchState);
@@ -143,12 +152,11 @@ void loop() {
   Serial.println("####END");
   digitalWrite(RelaisPin, LOW);
 
-  if ((sensorWert > schwellWert) && (autoopenStatus == 0) && (spaceSwitchState == 0) && (doorSwitchState == 1)){    
+  if ((sensorWert > schwellWert) && (autoopenStatus == 0) && (spaceSwitchState == 0) && (doorSwitchState == 1)){    // autoopen ein und tür unabgeschlossen und schalter ein
     delay(1500);
     digitalWrite(RelaisPin, HIGH);
     count = count +1;  // count autoopen on Spaceopen
-    //MQTT - TÜRKLINGEL OFFEN
-    client.publish(topicklingel, "Klingel-OPEN");
+    client.publish(topicklingel, "Klingel-OPEN");  //MQTT - TÜRKLINGEL OFFEN
     delay(3500);
     digitalWrite(RelaisPin, LOW);
     Serial.println("####GOING-COOL-DOWN");
@@ -158,11 +166,10 @@ void loop() {
     digitalWrite(RelaisPin, LOW);
   }
   if ((sensorWert > schwellWert) && (autoopenStatus == 0) && (spaceSwitchState == 1) ){
-  count = count +1;  // count autoopen on Spaceopen
-  //MQTT - TÜRKLINGEL ZU
-  client.publish(topicklingel, "Klingel-CLOSE");
-  Serial.println("####GOING-COOL-DOWN");
-  delay(86000);  // Cooldown ca. 1.3min
+    count = count +1;  // count autoopen on Spaceclosed
+      client.publish(topicklingel, "Klingel-CLOSE");   //MQTT - TÜRKLINGEL ZU
+    Serial.println("####GOING-COOL-DOWN");
+    delay(86000);  // Cooldown ca. 1.3min
   }
   delay(1000);     
 }
