@@ -13,6 +13,7 @@ const char* topicdebugwifi = "space/status/debug/wifi";
 const char* topicklingel = "space/status/klingel";
 const char* topicklingelopen = "space/status/klingel/count-OPEN";
 const char* topicklingelclose = "space/status/klingel/count-CLOSE";
+const char* topicdoor = "space/status/door";
 
 // *** sensorWert ***
 int sensorWert = 0;
