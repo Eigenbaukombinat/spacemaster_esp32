@@ -95,9 +95,6 @@ void loop() {
   doorSwitchState = digitalRead(doorSwitchPin);
   if (doorSwitchState != lastDoorSwitchState) {              //Statusabgleich zum letzen Durchlauf
     if (doorSwitchState == 0) { // tür abgeschlossen
-      String spacestatus = "closed";
-      Serial.println(spacestatus);
-      client.publish(topicopen, "false"); //MQTT Space closed
       client.publish(topicdoor, "lock"); //MQTT tür abgeschlossen 
     }
     if (doorSwitchState == 1) {//MQTT tür unabgeschlossen
