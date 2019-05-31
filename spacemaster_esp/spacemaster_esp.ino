@@ -95,7 +95,13 @@ void loop() {
   doorSwitchState = digitalRead(doorSwitchPin);
   if (doorSwitchState != lastDoorSwitchState) {              //Statusabgleich zum letzen Durchlauf
     if (doorSwitchState == 0) { // tür abgeschlossen
-      client.publish(topicdoor, "lock"); //MQTT tür abgeschlossen 
+      delay(2000);  // drei sekunden warten
+      // nochmal checken
+      doorSwitchState = digitalRead(doorSwitchPin);
+      if (doorSwitchState == 0) {
+        client.publish(topicdoor, "lock"); //MQTT tür abgeschlossen 
+      } 
+      
     }
     if (doorSwitchState == 1) {//MQTT tür unabgeschlossen
       client.publish(topicdoor, "unlock"); //MQTT tür offen 
